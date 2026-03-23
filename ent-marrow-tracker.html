@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ENT Marrow Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#060810;--bg2:#0b0e1a;--card:#0f1320;--card2:#141828;
+  --border:#1e2438;--border2:#252d45;
+  --ear:#ff8c42;--nose:#00d4aa;--pharynx:#ff4d8d;--larynx:#7c6dff;--q:#ffd700;
+  --text:#eef0f8;--muted:#4a5272;--muted2:#6b7599;
+  --done-bg:#071510;--done-border:#1a4a30;--done-text:#4ade80;
+  --r:12px;
+  --font-h:'Syne',sans-serif;--font-b:'Plus Jakarta Sans',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
+
+.hero{background:linear-gradient(160deg,#0b0e1a 0%,#0f1525 40%,#090c18 100%);border-bottom:1px solid var(--border);padding:36px 36px 28px;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
+.hero-inner{max-width:1160px;margin:0 auto;}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px;}
+.hero-brand{display:flex;flex-direction:column;gap:4px;}
+.hero-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:3px;color:var(--muted2);text-transform:uppercase;}
+.hero-title{font-family:var(--font-h);font-size:clamp(26px,4vw,42px);font-weight:800;letter-spacing:-1px;line-height:1.1;}
+.hero-title .e{color:var(--ear);}.hero-title .n{color:var(--nose);}.hero-title .t{color:var(--pharynx);}
+.hero-sub{font-size:12px;color:var(--muted2);margin-top:6px;}
+.hero-stats{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.stat-pill{background:var(--card2);border:1px solid var(--border2);border-radius:999px;padding:8px 18px;text-align:center;transition:all .2s;}
+.stat-pill:hover{transform:translateY(-2px);}
+.stat-val{font-family:var(--font-m);font-size:22px;font-weight:500;line-height:1;}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+.sv1{color:var(--ear);}.sv2{color:var(--done-text);}.sv3{color:var(--nose);}.sv4{color:var(--pharynx);}.sv5{color:var(--q);}
+
+.bars-wrap{display:flex;flex-direction:column;gap:10px;}
+.bar-row{display:flex;align-items:center;gap:12px;}
+.bar-label{font-family:var(--font-m);font-size:11px;color:var(--muted2);width:110px;flex-shrink:0;}
+.bar-track{flex:1;background:#111827;border-radius:999px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1);position:relative;}
+.bar-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:5px;background:rgba(255,255,255,.5);border-radius:999px;animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.bf-lec{background:linear-gradient(90deg,var(--nose),var(--ear),var(--pharynx));}
+.bf-time{background:linear-gradient(90deg,var(--larynx),var(--nose));}
+.bf-q{background:linear-gradient(90deg,var(--q),#ff8c42);}
+.bar-right{font-family:var(--font-m);font-size:11px;color:var(--muted2);width:160px;text-align:right;flex-shrink:0;}
+
+.tabs{max-width:1160px;margin:24px auto 0;padding:0 36px;display:flex;gap:8px;flex-wrap:wrap;}
+.tab{padding:7px 18px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);background:transparent;color:var(--muted2);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;font-family:var(--font-b);}
+.tab:hover{background:var(--card2);color:var(--text);}
+.tab.ear.active{border-color:var(--ear);color:var(--ear);background:rgba(255,140,66,.1);box-shadow:0 0 20px rgba(255,140,66,.15);}
+.tab.nose.active{border-color:var(--nose);color:var(--nose);background:rgba(0,212,170,.1);box-shadow:0 0 20px rgba(0,212,170,.15);}
+.tab.pharynx.active{border-color:var(--pharynx);color:var(--pharynx);background:rgba(255,77,141,.1);box-shadow:0 0 20px rgba(255,77,141,.15);}
+.tab.larynx.active{border-color:var(--larynx);color:var(--larynx);background:rgba(124,109,255,.1);box-shadow:0 0 20px rgba(124,109,255,.15);}
+.tab.qtab.active{border-color:var(--q);color:var(--q);background:rgba(255,215,0,.1);box-shadow:0 0 20px rgba(255,215,0,.15);}
+.tab.all.active{border-color:var(--text);color:var(--text);background:rgba(255,255,255,.07);}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tab.ear .dot{background:var(--ear);}.tab.nose .dot{background:var(--nose);}
+.tab.pharynx .dot{background:var(--pharynx);}.tab.larynx .dot{background:var(--larynx);}
+.tab.qtab .dot{background:var(--q);}
+
+.content{max-width:1160px;margin:32px auto 0;padding:0 36px;}
+.sec-block{margin-bottom:48px;}.sec-block.hidden{display:none;}
+.sec-head{display:flex;align-items:center;gap:16px;margin-bottom:18px;}
+.sec-icon-wrap{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.si-ear{background:rgba(255,140,66,.15);box-shadow:0 0 24px rgba(255,140,66,.2);}
+.si-nose{background:rgba(0,212,170,.15);box-shadow:0 0 24px rgba(0,212,170,.2);}
+.si-pharynx{background:rgba(255,77,141,.15);box-shadow:0 0 24px rgba(255,77,141,.2);}
+.si-larynx{background:rgba(124,109,255,.15);box-shadow:0 0 24px rgba(124,109,255,.2);}
+.si-q{background:rgba(255,215,0,.15);box-shadow:0 0 24px rgba(255,215,0,.2);}
+.sec-title-area{flex:1;}
+.sec-title{font-family:var(--font-h);font-size:22px;font-weight:800;}
+.st-ear{color:var(--ear);}.st-nose{color:var(--nose);}.st-pharynx{color:var(--pharynx);}.st-larynx{color:var(--larynx);}.st-q{color:var(--q);}
+.sec-meta{font-size:11px;color:var(--muted2);font-family:var(--font-m);margin-top:3px;}
+.sec-prog{flex-shrink:0;width:130px;text-align:right;}
+.sec-pct{font-family:var(--font-m);font-size:13px;margin-bottom:5px;}
+.sec-bar-wrap{background:#111827;border-radius:999px;height:6px;overflow:hidden;}
+.sec-bar-fill{height:100%;border-radius:999px;transition:width .4s ease;}
+.sb-ear{background:var(--ear);}.sb-nose{background:var(--nose);}.sb-pharynx{background:var(--pharynx);}.sb-larynx{background:var(--larynx);}.sb-q{background:var(--q);}
+
+.lec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;}
+.lec-card{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .25s;user-select:none;animation:fadeUp .35s ease both;position:relative;overflow:hidden;}
+.lec-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;transition:width .2s;}
+.lc-ear::before{background:var(--ear);}.lc-nose::before{background:var(--nose);}.lc-pharynx::before{background:var(--pharynx);}.lc-larynx::before{background:var(--larynx);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.lec-card:hover{background:var(--card2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.lc-ear:hover{border-color:rgba(255,140,66,.35);}.lc-nose:hover{border-color:rgba(0,212,170,.35);}.lc-pharynx:hover{border-color:rgba(255,77,141,.35);}.lc-larynx:hover{border-color:rgba(124,109,255,.35);}
+.lec-card:hover::before{width:4px;}
+.lec-card.done{background:var(--done-bg);border-color:var(--done-border);}
+.lec-card.done .lec-name{color:var(--done-text);text-decoration:line-through;text-decoration-color:rgba(74,222,128,.3);}
+.lec-card.done::before{background:var(--done-text) !important;}
+.chk{width:22px;height:22px;border-radius:7px;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px;}
+.lc-ear .chk{border-color:rgba(255,140,66,.5);}.lc-nose .chk{border-color:rgba(0,212,170,.5);}.lc-pharynx .chk{border-color:rgba(255,77,141,.5);}.lc-larynx .chk{border-color:rgba(124,109,255,.5);}
+.lec-card.done .chk{background:#15532e;border-color:#4ade80;}
+.chk-icon{font-size:13px;opacity:0;transform:scale(.4) rotate(-20deg);transition:all .25s;color:#4ade80;}
+.lec-card.done .chk-icon{opacity:1;transform:scale(1) rotate(0);}
+.lec-body{flex:1;min-width:0;}
+.lec-num{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-bottom:3px;}
+.lec-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.45;transition:color .2s;}
+.lec-foot{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.lec-tag{font-size:10px;font-family:var(--font-m);padding:2px 9px;border-radius:5px;font-weight:500;}
+.lt-ear{background:rgba(255,140,66,.12);color:var(--ear);}.lt-nose{background:rgba(0,212,170,.12);color:var(--nose);}.lt-pharynx{background:rgba(255,77,141,.12);color:var(--pharynx);}.lt-larynx{background:rgba(124,109,255,.12);color:var(--larynx);}
+.lec-dur{font-size:10px;font-family:var(--font-m);color:var(--muted2);}
+
+.q-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;}
+.q-card{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .25s;user-select:none;animation:fadeUp .35s ease both;position:relative;overflow:hidden;}
+.q-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--q);border-radius:3px 0 0 3px;transition:width .2s;}
+.q-card:hover{background:var(--card2);transform:translateY(-2px);border-color:rgba(255,215,0,.3);box-shadow:0 6px 24px rgba(0,0,0,.4);}
+.q-card:hover::before{width:4px;}
+.q-card.done{background:rgba(7,15,10,1);border-color:rgba(26,74,48,.8);}
+.q-card.done .q-name{color:var(--done-text);text-decoration:line-through;text-decoration-color:rgba(74,222,128,.3);}
+.q-card.done .qchk{background:#15532e;border-color:#4ade80;}
+.qchk{width:22px;height:22px;border-radius:7px;border:2px solid rgba(255,215,0,.5);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.q-name{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.4;flex:1;}
+.q-badge{font-size:11px;font-family:var(--font-m);padding:2px 9px;border-radius:5px;background:rgba(255,215,0,.1);color:var(--q);flex-shrink:0;}
+
+@keyframes burst{0%{transform:scale(0) rotate(0deg);opacity:1}100%{transform:scale(1.8) rotate(720deg);opacity:0}}
+.burst{position:fixed;pointer-events:none;z-index:9999;font-size:22px;animation:burst .65s ease forwards;}
+
+.reset-btn{position:fixed;bottom:28px;right:28px;background:var(--card2);border:1.5px solid var(--border2);color:var(--muted2);font-family:var(--font-b);font-size:12px;font-weight:600;padding:10px 20px;border-radius:999px;cursor:pointer;transition:all .2s;z-index:200;display:flex;align-items:center;gap:6px;}
+.reset-btn:hover{border-color:var(--pharynx);color:var(--pharynx);box-shadow:0 0 20px rgba(255,77,141,.2);}
+
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:#1e2438;border-radius:3px;}
+
+@media(max-width:640px){
+  .hero{padding:20px 16px 18px;}.content,.tabs{padding:0 16px;}
+  .sec-prog{display:none;}.stat-val{font-size:18px;}.stat-pill{padding:6px 12px;}
+  .bar-right{width:100px;font-size:10px;}
+}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-brand">
+        <div class="hero-eyebrow">Marrow · Dr. Manisha Sinha</div>
+        <h1 class="hero-title"><span class="e">E</span><span class="n">N</span><span class="t">T</span> Tracker</h1>
+        <div class="hero-sub">55 Lectures · 1 Month Sprint · Stay Consistent 🔥</div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-pill"><div class="stat-val sv1" id="leftCount">55</div><div class="stat-lbl">Left</div></div>
+        <div class="stat-pill"><div class="stat-val sv2" id="doneCount">0</div><div class="stat-lbl">Done</div></div>
+        <div class="stat-pill"><div class="stat-val sv3" id="hrsWatched">0m</div><div class="stat-lbl">Watched</div></div>
+        <div class="stat-pill"><div class="stat-val sv4" id="pctCount">0%</div><div class="stat-lbl">Progress</div></div>
+        <div class="stat-pill"><div class="stat-val sv5" id="qDoneCount">0</div><div class="stat-lbl">Q Done</div></div>
+      </div>
+    </div>
+    <div class="bars-wrap">
+      <div class="bar-row">
+        <span class="bar-label">📚 Lectures</span>
+        <div class="bar-track"><div class="bar-fill bf-lec" id="lecBar" style="width:0%"></div></div>
+        <span class="bar-right" id="lecBarLbl">0 / 55 completed</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">⏱ Time</span>
+        <div class="bar-track"><div class="bar-fill bf-time" id="timeBar" style="width:0%"></div></div>
+        <span class="bar-right" id="timeBarLbl">0m watched · 0m left</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">❓ Questions</span>
+        <div class="bar-track"><div class="bar-fill bf-q" id="qBar" style="width:0%"></div></div>
+        <span class="bar-right" id="qBarLbl">0 / 55 attempted</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab all active" onclick="filter('all')">🌐 All</button>
+  <button class="tab ear"        onclick="filter('ear')"><span class="dot"></span>Ear</button>
+  <button class="tab nose"       onclick="filter('nose')"><span class="dot"></span>Nose</button>
+  <button class="tab pharynx"    onclick="filter('pharynx')"><span class="dot"></span>Pharynx</button>
+  <button class="tab larynx"     onclick="filter('larynx')"><span class="dot"></span>Larynx</button>
+  <button class="tab qtab"       onclick="filter('qsec')"><span class="dot"></span>❓ Questionnaire</button>
+</div>
+
+<div class="content" id="content"></div>
+<button class="reset-btn" onclick="resetAll()">↺ Reset All</button>
+
+<script>
+const LECTURES=[
+  {id:11,s:'ear',    n:'Nerve Supply of Ear',d:24},
+  {id:12,s:'ear',    n:'Audiology and Evaluation: Tuning Fork Tests',d:72},
+  {id:13,s:'ear',    n:'Audiology and Evaluation: Audiogram (PTA)',d:46},
+  {id:14,s:'ear',    n:'Audiology - Part 3: Tympanometry and Stapedial Reflex',d:43},
+  {id:15,s:'ear',    n:'Audiology - Part 4: OAE, ECOG, BERA, and Others',d:65},
+  {id:16,s:'ear',    n:'Paediatric Hearing Assessment',d:29},
+  {id:17,s:'ear',    n:'Conditions of Tympanic Membrane',d:41},
+  {id:18,s:'ear',    n:'Acute Otitis Media',d:22},
+  {id:19,s:'ear',    n:'Serous Otitis Media',d:43},
+  {id:20,s:'ear',    n:'Chronic Mucosal Otitis Media',d:64},
+  {id:21,s:'ear',    n:'Chronic Squamous Otitis Media',d:63},
+  {id:22,s:'ear',    n:'Complications of Otitis Media',d:68},
+  {id:23,s:'ear',    n:'Otosclerosis',d:42},
+  {id:24,s:'ear',    n:'Vestibular Physiology',d:44},
+  {id:25,s:'ear',    n:'Vestibular Function Test: Part 1',d:34},
+  {id:26,s:'ear',    n:'Vestibular Function Test: Part 2',d:37},
+  {id:27,s:'ear',    n:'BPPV and Vestibular Neuritis',d:18},
+  {id:28,s:'ear',    n:"Meniere's Disease",d:49},
+  {id:29,s:'ear',    n:'Superior Semicircular Canal Dehiscence and Perilymph Fistula',d:22},
+  {id:30,s:'ear',    n:'Sudden SNHL, Noise Trauma, Ototoxicity and Presbycusis',d:37},
+  {id:31,s:'ear',    n:'Tumors of External and Middle Ear',d:32},
+  {id:32,s:'ear',    n:'Acoustic Neuroma',d:36},
+  {id:33,s:'ear',    n:'Facial Nerve: Part 1',d:28},
+  {id:34,s:'ear',    n:'Facial Nerve: Part 2',d:42},
+  {id:35,s:'ear',    n:'Hearing Rehabilitation',d:46},
+  {id:36,s:'nose',   n:'Introduction to Nose',d:3},
+  {id:37,s:'nose',   n:'Clinical Anatomy of External Nose and Choanal Atresia',d:32},
+  {id:38,s:'nose',   n:'Clinical Anatomy of Lateral Wall of Nose',d:61},
+  {id:39,s:'nose',   n:'Clinical Anatomy and Diseases of Septum',d:37},
+  {id:40,s:'nose',   n:'Nerve Supply of Nose and its Diseases: Part 1',d:44},
+  {id:41,s:'nose',   n:'Nerve Supply of Nose and its Diseases: Part 2',d:25},
+  {id:42,s:'nose',   n:'Arterial Supply of Nose and Epistaxis',d:71},
+  {id:43,s:'nose',   n:'Clinical Anatomy of PNS and Rhinosinusitis',d:80},
+  {id:44,s:'nose',   n:'Complications of Sinusitis',d:28},
+  {id:45,s:'nose',   n:'Fungal Sinusitis',d:42},
+  {id:46,s:'nose',   n:'Nasal Polyps',d:34},
+  {id:47,s:'nose',   n:'Atrophic Rhinitis and Granulomatous Conditions of Nose',d:39},
+  {id:48,s:'nose',   n:'Fractures of Face and CSF Rhinorrhea',d:57},
+  {id:49,s:'nose',   n:'Tumors of Nose and PNS',d:29},
+  {id:50,s:'pharynx',n:'Clinical Anatomy of Pharynx - Part 1: Overview',d:23},
+  {id:51,s:'pharynx',n:'Clinical Anatomy of Pharynx - Part 2: Pharyngeal Wall',d:54},
+  {id:52,s:'pharynx',n:'Clinical Anatomy Of Pharynx - Part 3: Cavity',d:80},
+  {id:53,s:'pharynx',n:'Clinical Anatomy of Pharynx - Part 4: Spaces and its Abscess',d:92},
+  {id:54,s:'pharynx',n:'Adenoid Hypertrophy',d:44},
+  {id:55,s:'pharynx',n:'Angiofibroma',d:32},
+  {id:56,s:'pharynx',n:'Nasopharyngeal Carcinoma',d:24},
+  {id:57,s:'pharynx',n:'Conditions of Tonsils and Tonsillectomy',d:79},
+  {id:58,s:'larynx', n:'Clinical Anatomy of Larynx: Part 1',d:75},
+  {id:59,s:'larynx', n:'Clinical Anatomy of Larynx: Part 2',d:65},
+  {id:60,s:'larynx', n:'Infections of Larynx',d:43},
+  {id:61,s:'larynx', n:'Congenital Conditions of Larynx',d:44},
+  {id:62,s:'larynx', n:'Voice Disorders',d:59},
+  {id:63,s:'larynx', n:'Nerve Supply of Larynx and Vocal Cord Palsy',d:72},
+  {id:64,s:'larynx', n:'Carcinoma Larynx',d:88},
+  {id:65,s:'larynx', n:'Tracheostomy and Foreign Body in Airways',d:51},
+];
+const SECS=[
+  {id:'ear',    label:'Ear',    icon:'👂',ic:'si-ear',   tc:'st-ear',   sc:'sb-ear',   pc:'st-ear',  lc:'lc-ear',   lt:'lt-ear'},
+  {id:'nose',   label:'Nose',   icon:'👃',ic:'si-nose',  tc:'st-nose',  sc:'sb-nose',  pc:'st-nose', lc:'lc-nose',  lt:'lt-nose'},
+  {id:'pharynx',label:'Pharynx',icon:'🗣️',ic:'si-pharynx',tc:'st-pharynx',sc:'sb-pharynx',pc:'st-pharynx',lc:'lc-pharynx',lt:'lt-pharynx'},
+  {id:'larynx', label:'Larynx', icon:'🔊',ic:'si-larynx',tc:'st-larynx',sc:'sb-larynx',pc:'st-larynx',lc:'lc-larynx',lt:'lt-larynx'},
+];
+const TOTAL_MINS=LECTURES.reduce((a,l)=>a+l.d,0);
+const TOTAL=LECTURES.length;
+function fmt(m){return m<60?m+'m':Math.floor(m/60)+'h '+(m%60)+'m';}
+
+let LD=new Set(JSON.parse(localStorage.getItem('ent_lec5')||'[]'));
+let QD=new Set(JSON.parse(localStorage.getItem('ent_q5')||'[]'));
+function save(){localStorage.setItem('ent_lec5',JSON.stringify([...LD]));localStorage.setItem('ent_q5',JSON.stringify([...QD]));}
+
+function burst(el){
+  const r=el.getBoundingClientRect();
+  ['✨','🎉','⭐','💥','🔥'].slice(0,4).forEach((e,i)=>{
+    const b=document.createElement('div');b.className='burst';b.textContent=e;
+    b.style.left=(r.left+r.width/2+(Math.random()-.5)*70)+'px';
+    b.style.top=(r.top+r.height/2+(Math.random()-.5)*50)+'px';
+    b.style.animationDelay=(i*90)+'ms';
+    document.body.appendChild(b);setTimeout(()=>b.remove(),900);
+  });
+}
+function toggleL(id){
+  const was=!LD.has(id);LD.has(id)?LD.delete(id):LD.add(id);save();
+  const c=document.getElementById('lc'+id);if(c){c.classList.toggle('done',LD.has(id));if(was&&LD.has(id))burst(c);}
+  updateStats();
+}
+function toggleQ(id){
+  const was=!QD.has(id);QD.has(id)?QD.delete(id):QD.add(id);save();
+  const c=document.getElementById('qc'+id);if(c){c.classList.toggle('done',QD.has(id));if(was&&QD.has(id))burst(c);}
+  updateStats();
+}
+function updateStats(){
+  const n=LD.size,pct=Math.round(n/TOTAL*100);
+  const wm=LECTURES.filter(l=>LD.has(l.id)).reduce((a,l)=>a+l.d,0);
+  const qn=QD.size,qpct=Math.round(qn/TOTAL*100);
+  document.getElementById('doneCount').textContent=n;
+  document.getElementById('leftCount').textContent=TOTAL-n;
+  document.getElementById('hrsWatched').textContent=fmt(wm);
+  document.getElementById('pctCount').textContent=pct+'%';
+  document.getElementById('qDoneCount').textContent=qn;
+  document.getElementById('lecBar').style.width=pct+'%';
+  document.getElementById('lecBarLbl').textContent=n+' / '+TOTAL+' completed';
+  document.getElementById('timeBar').style.width=(wm/TOTAL_MINS*100)+'%';
+  document.getElementById('timeBarLbl').textContent=fmt(wm)+' watched · '+fmt(TOTAL_MINS-wm)+' left';
+  document.getElementById('qBar').style.width=qpct+'%';
+  document.getElementById('qBarLbl').textContent=qn+' / '+TOTAL+' attempted';
+  SECS.forEach(s=>{
+    const lecs=LECTURES.filter(l=>l.s===s.id);
+    const sd=lecs.filter(l=>LD.has(l.id)).length;
+    const dm=lecs.filter(l=>LD.has(l.id)).reduce((a,l)=>a+l.d,0);
+    const tm=lecs.reduce((a,l)=>a+l.d,0);
+    const sp=Math.round(sd/lecs.length*100);
+    const pe=document.getElementById('sp-'+s.id),fe=document.getElementById('sf-'+s.id),me=document.getElementById('sm-'+s.id);
+    if(pe)pe.textContent=sp+'%';if(fe)fe.style.width=sp+'%';
+    if(me)me.textContent=sd+'/'+lecs.length+' · '+fmt(dm)+' / '+fmt(tm);
+  });
+  const qsp=Math.round(qn/TOTAL*100);
+  const qpe=document.getElementById('sp-qsec'),qfe=document.getElementById('sf-qsec'),qme=document.getElementById('sm-qsec');
+  if(qpe)qpe.textContent=qsp+'%';if(qfe)qfe.style.width=qsp+'%';
+  if(qme)qme.textContent=qn+' / '+TOTAL+' topics attempted';
+}
+function render(){
+  const wrap=document.getElementById('content');wrap.innerHTML='';
+  SECS.forEach(s=>{
+    const lecs=LECTURES.filter(l=>l.s===s.id);
+    const tm=lecs.reduce((a,l)=>a+l.d,0);
+    const blk=document.createElement('div');blk.className='sec-block';blk.id='blk-'+s.id;
+    blk.innerHTML=`<div class="sec-head"><div class="sec-icon-wrap ${s.ic}">${s.icon}</div><div class="sec-title-area"><div class="sec-title ${s.tc}">${s.label}</div><div class="sec-meta" id="sm-${s.id}">${lecs.length} lectures · ${fmt(tm)}</div></div><div class="sec-prog"><div class="sec-pct ${s.pc}" id="sp-${s.id}">0%</div><div class="sec-bar-wrap"><div class="sec-bar-fill ${s.sc}" id="sf-${s.id}" style="width:0%"></div></div></div></div><div class="lec-grid" id="grid-${s.id}"></div>`;
+    wrap.appendChild(blk);
+    const grid=document.getElementById('grid-'+s.id);
+    lecs.forEach((lec,i)=>{
+      const c=document.createElement('div');
+      c.className='lec-card '+s.lc+(LD.has(lec.id)?' done':'');
+      c.id='lc'+lec.id;c.style.animationDelay=(i*18)+'ms';c.onclick=()=>toggleL(lec.id);
+      c.innerHTML=`<div class="chk"><span class="chk-icon">✓</span></div><div class="lec-body"><div class="lec-num">Lecture ${lec.id}</div><div class="lec-name">${lec.n}</div><div class="lec-foot"><span class="lec-tag ${s.lt}">${s.label}</span><span class="lec-dur">⏱ ${lec.d} min</span></div></div>`;
+      grid.appendChild(c);
+    });
+  });
+  // Q section
+  const qblk=document.createElement('div');qblk.className='sec-block';qblk.id='blk-qsec';
+  qblk.innerHTML=`<div class="sec-head"><div class="sec-icon-wrap si-q">❓</div><div class="sec-title-area"><div class="sec-title st-q">Questionnaire Tracker</div><div class="sec-meta" id="sm-qsec">Tick after attempting MCQs for each topic</div></div><div class="sec-prog"><div class="sec-pct st-q" id="sp-qsec">0%</div><div class="sec-bar-wrap"><div class="sec-bar-fill sb-q" id="sf-qsec" style="width:0%"></div></div></div></div><div class="q-grid" id="q-grid"></div>`;
+  wrap.appendChild(qblk);
+  const qg=document.getElementById('q-grid');
+  LECTURES.forEach((lec,i)=>{
+    const s=SECS.find(x=>x.id===lec.s);
+    const c=document.createElement('div');
+    c.className='q-card'+(QD.has(lec.id)?' done':'');
+    c.id='qc'+lec.id;c.style.animationDelay=(i*12)+'ms';c.onclick=()=>toggleQ(lec.id);
+    c.innerHTML=`<div class="qchk"><span class="chk-icon">✓</span></div><div class="q-name">${lec.n}</div><span class="q-badge">${s.icon} ${s.label}</span>`;
+    qg.appendChild(c);
+  });
+  updateStats();
+}
+function filter(which){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(which==='qsec')document.querySelector('.tab.qtab').classList.add('active');
+  else document.querySelector('.tab.'+which).classList.add('active');
+  ['ear','nose','pharynx','larynx','qsec'].forEach(id=>{
+    const b=document.getElementById('blk-'+id);
+    if(b)b.classList.toggle('hidden',which!=='all'&&which!==id);
+  });
+}
+function resetAll(){
+  if(!confirm('Reset ALL progress?'))return;
+  LD.clear();QD.clear();save();
+  document.querySelectorAll('.lec-card,.q-card').forEach(c=>c.classList.remove('done'));
+  updateStats();
+}
+render();
+</script>
+</body>
+</html>
